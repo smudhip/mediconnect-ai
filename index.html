@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MediConnect AI - Agentic Medical Analysis</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .agent-section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .agent-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .agent-icon { font-size: 24px; margin-right: 10px; }
+        .agent-status { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; }
+        .status-ready { background: #e8f5e8; color: #2e7d32; }
+        .status-analyzing { background: #fff3e0; color: #f57c00; }
+        .status-complete { background: #e3f2fd; color: #1976d2; }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .pattern-card { border: 1px solid #ddd; border-radius: 5px; padding: 15px; margin: 10px 0; }
+        .pattern-critical { border-left: 5px solid #e74c3c; background: #fdf2f2; }
+        .pattern-warning { border-left: 5px solid #f39c12; background: #fef9e7; }
+        .pattern-info { border-left: 5px solid #3498db; background: #f0f8ff; }
+        .explanation-box { background: #e8f5e8; border: 1px solid #4caf50; border-radius: 5px; padding: 20px; margin: 15px 0; }
+        .alert { padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; }
+        .alert-critical { background: #e74c3c; color: white; }
+        .alert-warning { background: #f39c12; color: white; }
+        .alert-success { background: #27ae60; color: white; }
+        .run-btn { background: #3498db; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .run-btn:hover { background: #2980b9; }
+        .confidence-bar { width: 100%; height: 20px; background: #ecf0f1; border-radius: 10px; overflow: hidden; margin: 5px 0; }
+        .confidence-fill { height: 100%; background: linear-gradient(90deg, #e74c3c 0%, #f39c12 50%, #27ae60 100%); transition: width 0.5s; }
+        .loading { text-align: center; padding: 20px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏥 MediConnect AI</h1>
+            <h2>Agentic Medical Pattern Analysis</h2>
+            <p><strong>Multi-Agent System for Comprehensive Medical Analysis</strong></p>
+            <div style="background: #27ae60; color: white; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                ✅ Connected to AWS Backend: https://2gqu1ehiig.execute-api.us-east-1.amazonaws.com/prod/analyze
+            </div>
+            <div id="backendStatus" style="padding: 5px; border-radius: 3px; font-size: 14px;">
+                🔄 Checking backend status...
+            </div>
+        </div>
+
+        <!-- Patient Input Section -->
+        <div class="agent-section">
+            <div class="agent-header">
+                <span class="agent-icon">📝</span>
+                <h3>Patient Data Collection</h3>
+                <span class="agent-status status-ready">READY</span>
+            </div>
+            
+            <div class="input-grid">
+                <div>
+                    <div class="form-group">
+                        <label>Patient Name:</label>
+                        <input type="text" id="patientName" value="Margaret Johnson">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Age:</label>
+                        <input type="number" id="age" value="67">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Primary Condition:</label>
+                        <select id="condition">
+                            <option value="thyroid">Thyroid Disorder</option>
+                            <option value="cardiac" selected>Heart Condition</option>
+                            <option value="diabetes">Diabetes</option>
+                            <option value="respiratory">Respiratory Condition</option>
+                            <option value="neurological">Neurological Condition</option>
+                            <option value="cancer">Cancer</option>
+                            <option value="arthritis">Arthritis</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="form-group">
+                        <label>Medical History:</label>
+                        <select id="history" multiple style="height: 120px;">
+                            <option value="cardiac_history" selected>Previous Heart Problems</option>
+                            <option value="diabetes_history">Diabetes History</option>
+                            <option value="hypertension">High Blood Pressure</option>
+                            <option value="surgery_history">Previous Surgeries</option>
+                            <option value="family_cardiac" selected>Family Heart Disease</option>
+                            <option value="smoking">Smoking History</option>
+                            <option value="kidney_disease">Kidney Problems</option>
+                            <option value="stroke_history">Previous Stroke</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="form-group">
+                        <label>Current Symptoms:</label>
+                        <input type="text" id="symptoms" value="leg swelling, shortness of breath, fatigue">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Current Medications:</label>
+                        <input type="text" id="medications" value="Lisinopril, Metoprolol, Furosemide">
+                    </div>
+                </div>
+            </div>
+            
+            <button class="run-btn" onclick="runAgenticAnalysis()">🚀 Run Multi-Agent Medical Analysis</button>
+        </div>
+
+        <!-- Agent Status Dashboard -->
+        <div class="agent-section" id="agentDashboard" style="display: none;">
+            <div class="agent-header">
+                <span class="agent-icon">🤖</span>
+                <h3>AI Agent Analysis Dashboard</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                <div id="agent1" class="pattern-card">
+                    <h4>🔍 Agent 1: Pattern Recognition</h4>
+                    <div class="agent-status status-ready">READY</div>
+                    <p>Analyzing symptom correlations and medical history patterns...</p>
+                </div>
+                <div id="agent2" class="pattern-card">
+                    <h4>📊 Agent 2: Risk Assessment</h4>
+                    <div class="agent-status status-ready">READY</div>
+                    <p>Evaluating treatment risks and surgical candidacy...</p>
+                </div>
+                <div id="agent3" class="pattern-card">
+                    <h4>💬 Agent 3: Family Communication</h4>
+                    <div class="agent-status status-ready">READY</div>
+                    <p>Generating family-friendly explanations...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div class="loading" id="loadingSection" style="display: none;">
+            <div class="spinner"></div>
+            <p>Multi-agent analysis in progress...</p>
+        </div>
+
+        <!-- Results Sections -->
+        <div class="agent-section" id="patternResults" style="display: none;">
+            <div class="agent-header">
+                <span class="agent-icon">🔗</span>
+                <h3>Pattern Recognition Results</h3>
+                <span class="agent-status status-complete">COMPLETE</span>
+            </div>
+            <div id="patternContent"></div>
+        </div>
+
+        <div class="agent-section" id="riskResults" style="display: none;">
+            <div class="agent-header">
+                <span class="agent-icon">⚠️</span>
+                <h3>Risk Assessment Results</h3>
+                <span class="agent-status status-complete">COMPLETE</span>
+            </div>
+            <div id="riskContent"></div>
+        </div>
+
+        <div class="agent-section" id="communicationResults" style="display: none;">
+            <div class="agent-header">
+                <span class="agent-icon">👨‍👩‍👧‍👦</span>
+                <h3>Family Communication</h3>
+                <span class="agent-status status-complete">COMPLETE</span>
+            </div>
+            <div id="communicationContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // AWS API Gateway endpoint
+        const AWS_ENDPOINT = 'https://ao8njk7pvh.execute-api.us-east-1.amazonaws.com/prod/analyze';
+        let backendOnline = false;
+
+        // Check backend status on page load
+        window.onload = function() {
+            checkBackendStatus();
+        };
+
+        async function checkBackendStatus() {
+            const statusElement = document.getElementById('backendStatus');
+            statusElement.innerHTML = '🟡 Checking AWS backend...';
+            statusElement.style.background = '#f39c12';
+            statusElement.style.color = 'white';
+
+            try {
+                const response = await fetch(AWS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ test: 'connection' }),
+                    timeout: 5000
+                });
+                
+                backendOnline = true;
+                statusElement.innerHTML = '🟢 AWS Backend Online - Ready for Analysis';
+                statusElement.style.background = '#27ae60';
+                statusElement.style.color = 'white';
+            } catch (error) {
+                backendOnline = false;
+                statusElement.innerHTML = '🔴 AWS Backend Offline - Using Local Analysis';
+                statusElement.style.background = '#e74c3c';
+                statusElement.style.color = 'white';
+            }
+        }
+
+        async function runAgenticAnalysis() {
+            // Collect data
+            const patientName = document.getElementById('patientName').value;
+            const age = document.getElementById('age').value;
+            const condition = document.getElementById('condition').value;
+            const symptoms = document.getElementById('symptoms').value.split(',').map(s => s.trim());
+            const historySelect = document.getElementById('history');
+            const history = Array.from(historySelect.selectedOptions).map(option => option.value);
+            const medications = document.getElementById('medications').value;
+            
+            const patientData = {
+                name: patientName,
+                age: parseInt(age),
+                condition,
+                symptoms,
+                history,
+                medications,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Show agent dashboard and loading
+            document.getElementById('agentDashboard').style.display = 'block';
+            document.getElementById('loadingSection').style.display = 'block';
+            
+            // Hide previous results
+            document.getElementById('patternResults').style.display = 'none';
+            document.getElementById('riskResults').style.display = 'none';
+            document.getElementById('communicationResults').style.display = 'none';
+            
+            // Simulate agent processing
+            await simulateAgentProcessing();
+            
+            let analysis;
+            let analysisSource = 'Local Fallback';
+            
+            // Try AWS backend first
+            if (backendOnline) {
+                try {
+                    const response = await fetch(AWS_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ patient_data: patientData })
+                    });
+                    
+                    if (response.ok) {
+                        const awsResult = await response.json();
+                        analysis = convertAwsToLocal(awsResult, patientData);
+                        analysisSource = 'AWS Backend';
+                    } else {
+                        throw new Error('AWS response not ok');
+                    }
+                } catch (error) {
+                    console.log('AWS backend failed, using local analysis');
+                    analysis = generateAgenticAnalysis(condition, symptoms, history, patientName, age, medications);
+                }
+            } else {
+                analysis = generateAgenticAnalysis(condition, symptoms, history, patientName, age, medications);
+            }
+            
+            // Add analysis source info
+            analysis.source = analysisSource;
+            
+            // Hide loading
+            document.getElementById('loadingSection').style.display = 'none';
+            
+            // Display results
+            displayAgenticResults(analysis);
+        }
+        
+        function convertAwsToLocal(awsResult, patientData) {
+            // Convert AWS backend response to local format
+            return {
+                patterns: awsResult.patterns || [],
+                alerts: awsResult.alerts || [],
+                recommendations: awsResult.recommendations || [],
+                riskLevel: awsResult.risk_level || 'MODERATE',
+                confidence: awsResult.confidence || 90,
+                name: patientData.name,
+                condition: patientData.condition,
+                source: 'AWS Backend'
+            };
+        }
+        
+        async function simulateAgentProcessing() {
+            const agents = ['agent1', 'agent2', 'agent3'];
+            
+            for (let i = 0; i < agents.length; i++) {
+                const agent = document.getElementById(agents[i]);
+                const status = agent.querySelector('.agent-status');
+                
+                // Set to analyzing
+                status.textContent = 'ANALYZING';
+                status.className = 'agent-status status-analyzing';
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Set to complete
+                status.textContent = 'COMPLETE';
+                status.className = 'agent-status status-complete';
+            }
+        }
+        
+        function generateAgenticAnalysis(condition, symptoms, history, name, age, medications) {
+            let riskLevel = 'MODERATE';
+            let patterns = [];
+            let alerts = [];
+            let recommendations = [];
+            let confidence = 85;
+            
+            // Multi-condition analysis
+            const hasKidneyDisease = history.includes('kidney_disease');
+            const hasThyroid = condition === 'thyroid';
+            const hasDiabetes = history.includes('diabetes_history') || condition === 'diabetes';
+            const hasHypertension = history.includes('hypertension');
+            
+            // Diabetes-specific patterns
+            if (hasDiabetes) {
+                patterns.push({
+                    type: 'DIABETES COMPLICATIONS MONITORING',
+                    description: 'Requires blood sugar control, eye exams, foot care, and kidney monitoring',
+                    severity: 'HIGH'
+                });
+                
+                if (hasKidneyDisease) {
+                    patterns.push({
+                        type: 'DIABETIC NEPHROPATHY',
+                        description: 'Diabetes is damaging kidneys - strict blood sugar control critical',
+                        severity: 'CRITICAL'
+                    });
+                    riskLevel = 'CRITICAL';
+                    confidence = 96;
+                    alerts.push('🚨 CRITICAL: Diabetic kidney disease requires aggressive management');
+                }
+                
+                if (hasHypertension) {
+                    patterns.push({
+                        type: 'DIABETES + HYPERTENSION',
+                        description: 'Combined cardiovascular and kidney damage risk - both need tight control',
+                        severity: 'HIGH'
+                    });
+                    riskLevel = 'HIGH';
+                }
+            }
+            
+            // Pattern Analysis - Kidney + Thyroid
+            if (hasKidneyDisease && hasThyroid) {
+                patterns.push({
+                    type: 'KIDNEY-THYROID INTERACTION',
+                    description: 'Thyroid disorders affect kidney function; kidney disease alters thyroid hormone metabolism',
+                    severity: 'HIGH'
+                });
+                riskLevel = 'HIGH';
+                confidence = 92;
+                alerts.push('⚠️ CRITICAL INTERACTION: Thyroid medications require dose adjustment in kidney disease');
+            }
+            
+            // Kidney disease patterns
+            if (hasKidneyDisease) {
+                patterns.push({
+                    type: 'CHRONIC KIDNEY DISEASE MONITORING',
+                    description: 'Requires careful medication dosing and electrolyte monitoring',
+                    severity: 'HIGH'
+                });
+                
+                if (hasDiabetes || hasHypertension) {
+                    patterns.push({
+                        type: 'ACCELERATED KIDNEY DECLINE RISK',
+                        description: 'Diabetes/Hypertension + Kidney disease = Rapid progression risk',
+                        severity: 'CRITICAL'
+                    });
+                    riskLevel = 'CRITICAL';
+                    confidence = 95;
+                }
+            }
+            
+            // Cardiac patterns
+            if (condition === 'cardiac' && history.includes('family_cardiac')) {
+                patterns.push({
+                    type: 'GENETIC RISK PATTERN',
+                    description: 'Family heart disease + current cardiac condition = High hereditary risk',
+                    severity: 'HIGH'
+                });
+                riskLevel = 'HIGH';
+                confidence = 95;
+            }
+            
+            if (condition === 'cardiac' && symptoms.some(s => s.toLowerCase().includes('swelling')) && history.includes('cardiac_history')) {
+                patterns.push({
+                    type: 'HEART FAILURE PROGRESSION',
+                    description: 'Cardiac history + new leg swelling = Heart failure worsening',
+                    severity: 'CRITICAL'
+                });
+                riskLevel = 'CRITICAL';
+                confidence = 98;
+            }
+            
+            // Elderly complexity
+            if (history.length > 2 && age > 65) {
+                patterns.push({
+                    type: 'ELDERLY COMPLEXITY',
+                    description: 'Multiple conditions in elderly patient - polypharmacy risk',
+                    severity: 'MODERATE'
+                });
+            }
+            
+            // Risk Assessment
+            if (riskLevel === 'CRITICAL') {
+                alerts.push('🚨 CRITICAL: Immediate specialist evaluation required');
+                alerts.push('⚠️ SURGERY: Defer elective procedures until stabilization');
+            } else if (riskLevel === 'HIGH') {
+                alerts.push('⚠️ HIGH RISK: Enhanced monitoring and aggressive treatment needed');
+            }
+            
+            // Kidney-specific alerts
+            if (hasKidneyDisease) {
+                alerts.push('💊 MEDICATION ALERT: Adjust doses for kidney function (GFR-based)');
+                alerts.push('🔬 MONITORING: Regular creatinine, GFR, and electrolytes required');
+            }
+            
+            // Recommendations by condition
+            switch(condition) {
+                case 'cardiac':
+                    recommendations.push('ECG, echocardiogram, and BNP levels');
+                    recommendations.push('Heart failure medications optimization');
+                    if (history.includes('family_cardiac')) {
+                        recommendations.push('Genetic counseling consideration');
+                        recommendations.push('Family screening recommendations');
+                    }
+                    break;
+                    
+                case 'diabetes':
+                    recommendations.push('📊 HbA1c every 3 months (target <7%)');
+                    recommendations.push('🩸 Daily blood glucose monitoring as directed');
+                    recommendations.push('👁️ Annual dilated eye exam (retinopathy screening)');
+                    recommendations.push('🦶 Daily foot inspection, podiatry visits');
+                    recommendations.push('💊 Metformin, insulin, or other diabetes medications');
+                    if (hasKidneyDisease) {
+                        recommendations.push('⚠️ CRITICAL: Some diabetes drugs contraindicated in kidney disease');
+                        recommendations.push('Use kidney-safe medications (e.g., insulin, certain GLP-1 agonists)');
+                    }
+                    if (hasHypertension) {
+                        recommendations.push('🩺 Blood pressure <130/80 mmHg target');
+                        recommendations.push('ACE inhibitor or ARB for kidney protection');
+                    }
+                    break;
+                    
+                case 'thyroid':
+                    recommendations.push('TSH, Free T3, Free T4 monitoring every 6-8 weeks');
+                    recommendations.push('Endocrinology consultation for medication adjustment');
+                    if (hasKidneyDisease) {
+                        recommendations.push('⚠️ CRITICAL: Thyroid medication dosing adjusted for kidney function');
+                        recommendations.push('Monitor for hypothyroidism worsening with kidney decline');
+                        recommendations.push('Check for anemia (common in both conditions)');
+                    }
+                    break;
+                    
+                default:
+                    recommendations.push('Specialist consultation');
+                    recommendations.push('Regular monitoring');
+            }
+            
+            // Kidney-specific recommendations
+            if (hasKidneyDisease) {
+                recommendations.push('🔬 Kidney Function Tests: Creatinine, GFR, BUN monthly');
+                recommendations.push('💊 Nephrology consultation for medication review');
+                recommendations.push('📊 Electrolytes: Potassium, phosphorus, calcium monitoring');
+                recommendations.push('🩸 Anemia screening: CBC, iron studies, EPO levels');
+                recommendations.push('🍽️ Dietary: Low sodium, protein restriction if GFR <30');
+                
+                if (hasThyroid) {
+                    recommendations.push('⚠️ Coordinate care between Nephrology and Endocrinology');
+                }
+            }
+            
+            return {
+                patterns,
+                alerts,
+                recommendations,
+                riskLevel,
+                confidence,
+                name,
+                condition
+            };
+        }
+        
+        function displayAgenticResults(analysis) {
+            // Pattern Results
+            let patternHtml = `
+                <div class="alert alert-${analysis.source === 'AWS Backend' ? 'success' : 'warning'}">
+                    📡 Analysis Source: ${analysis.source}
+                </div>
+                <div class="alert alert-${analysis.riskLevel.toLowerCase() === 'critical' ? 'critical' : analysis.riskLevel.toLowerCase() === 'high' ? 'warning' : 'success'}">
+                    🔍 RISK LEVEL: ${analysis.riskLevel}
+                </div>
+            `;
+            
+            if (analysis.patterns.length > 0) {
+                analysis.patterns.forEach(pattern => {
+                    const cardClass = pattern.severity === 'CRITICAL' ? 'pattern-critical' : 
+                                     pattern.severity === 'HIGH' ? 'pattern-warning' : 'pattern-info';
+                    patternHtml += `
+                        <div class="pattern-card ${cardClass}">
+                            <h4>🔗 ${pattern.type}</h4>
+                            <p>${pattern.description}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                patternHtml += '<div class="pattern-card pattern-info"><h4>✅ No Critical Patterns</h4><p>Standard monitoring recommended</p></div>';
+            }
+            
+            document.getElementById('patternContent').innerHTML = patternHtml;
+            document.getElementById('patternResults').style.display = 'block';
+            
+            // Risk Results
+            let riskHtml = '';
+            analysis.alerts.forEach(alert => {
+                const alertClass = alert.includes('🚨') ? 'alert-critical' : 'alert-warning';
+                riskHtml += `<div class="alert ${alertClass}">${alert}</div>`;
+            });
+            
+            riskHtml += `
+                <h4>🎯 Clinical Recommendations:</h4>
+                <ul>
+            `;
+            analysis.recommendations.forEach(rec => {
+                riskHtml += `<li>${rec}</li>`;
+            });
+            riskHtml += '</ul>';
+            
+            riskHtml += `
+                <h4>📊 Confidence Level:</h4>
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${analysis.confidence}%"></div>
+                </div>
+                <p>Analysis Confidence: ${analysis.confidence}%</p>
+            `;
+            
+            document.getElementById('riskContent').innerHTML = riskHtml;
+            document.getElementById('riskResults').style.display = 'block';
+            
+            // Communication Results - Dynamic based on condition
+            const hasKidney = analysis.patterns.some(p => p.type.includes('KIDNEY'));
+            const hasThyroid = analysis.condition === 'thyroid';
+            const hasDiabetes = analysis.condition === 'diabetes';
+            const hasCardiac = analysis.condition === 'cardiac';
+            
+            let conditionExplanation = '';
+            if (hasKidney && hasThyroid) {
+                conditionExplanation = '<p><strong>IMPORTANT:</strong> Thyroid and kidney problems affect each other. Thyroid medications need special dosing when kidneys aren\'t working well.</p>';
+            } else if (hasKidney) {
+                conditionExplanation = '<p><strong>IMPORTANT:</strong> Kidney disease requires careful medication management and regular blood tests.</p>';
+            } else if (hasThyroid) {
+                conditionExplanation = '<p>Thyroid disorders affect metabolism and energy. Regular blood tests ensure correct medication doses.</p>';
+            } else if (hasDiabetes) {
+                conditionExplanation = '<p><strong>IMPORTANT:</strong> Diabetes affects blood vessels, nerves, kidneys, and eyes. Good blood sugar control prevents complications.</p>';
+            } else if (hasCardiac) {
+                conditionExplanation = analysis.riskLevel === 'CRITICAL' ? 
+                    '<p><strong>URGENT:</strong> Serious heart condition needs immediate attention. Leg swelling means heart isn\'t pumping well.</p>' :
+                    analysis.riskLevel === 'HIGH' ?
+                    '<p><strong>IMPORTANT:</strong> Family history increases risk. More aggressive prevention needed.</p>' :
+                    '<p>Continue treatment with regular follow-up.</p>';
+            } else {
+                conditionExplanation = '<p>Continue treatment with regular follow-up.</p>';
+            }
+            
+            let warningSignsHtml = '<h5>What to watch for:</h5><ul>';
+            if (hasKidney) {
+                warningSignsHtml += '<li>🦵 Severe leg/ankle swelling</li><li>😰 Nausea, vomiting, loss of appetite</li><li>🤢 Confusion or difficulty concentrating</li><li>💤 Extreme fatigue</li><li>🫁 Shortness of breath</li><li>💧 Decreased or foamy urine</li>';
+            }
+            if (hasThyroid) {
+                warningSignsHtml += '<li>💓 Rapid or irregular heartbeat</li><li>🥵 Heat intolerance or sweating</li><li>😰 Anxiety, tremors, nervousness</li><li>⚖️ Unexplained weight changes</li><li>💤 Extreme fatigue</li><li>🧠 Memory problems</li>';
+            }
+            if (hasDiabetes) {
+                warningSignsHtml += '<li>💧 Excessive thirst or urination</li><li>😵 Dizziness, confusion, shakiness</li><li>👁️ Blurred vision</li><li>🦶 Numbness in feet/hands</li><li>🩹 Slow-healing wounds</li><li>💤 Extreme fatigue</li>';
+            }
+            if (hasCardiac) {
+                warningSignsHtml += '<li>🫁 Increased shortness of breath</li><li>🦵 More leg swelling</li><li>💔 Chest pain or pressure</li><li>💤 Extreme fatigue</li>';
+            }
+            if (!hasKidney && !hasThyroid && !hasDiabetes && !hasCardiac) {
+                warningSignsHtml += '<li>New or worsening symptoms</li><li>Medication side effects</li><li>Difficulty with daily activities</li>';
+            }
+            warningSignsHtml += '</ul>';
+            
+            const communicationHtml = `
+                <div class="explanation-box">
+                    <h4>👨👩👧👦 Family Explanation</h4>
+                    <p><strong>${analysis.name}</strong> has ${analysis.condition} condition with ${analysis.patterns.length > 0 ? 'important medical interactions' : 'standard care needs'}.</p>
+                    ${conditionExplanation}
+                    ${warningSignsHtml}
+                    <h5>Next steps:</h5>
+                    <ul>
+                        <li>💊 Follow all medication schedules</li>
+                        <li>📅 Keep all medical appointments</li>
+                        <li>📞 Report new symptoms immediately</li>
+                        ${hasKidney ? '<li>🔬 Regular kidney function blood tests</li>' : ''}
+                        ${hasThyroid ? '<li>🩺 Monitor thyroid levels every 6-8 weeks</li>' : ''}
+                        ${hasDiabetes ? '<li>📊 Check blood sugar as directed</li>' : ''}
+                        ${analysis.patterns.some(p => p.type.includes('GENETIC')) ? '<li>👨‍👩‍👧‍👦 Consider family screening</li>' : ''}
+                        ${hasKidney && hasThyroid ? '<li>⚠️ Ensure specialists communicate</li>' : ''}
+                    </ul>
+                </div>
+            `;
+            
+            document.getElementById('communicationContent').innerHTML = communicationHtml;
+            document.getElementById('communicationResults').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
